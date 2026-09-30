@@ -15,11 +15,20 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dataDir = path.join(__dirname, '..', 'data');
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+const isVercel = Boolean(process.env.VERCEL);
+
+const dataDir = isVercel
+  ? '/tmp/contentforge-data'
+  : path.join(__dirname, '..', 'data');
+
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
 
 const dbPath = process.env.SQLITE_PATH
-  ? path.join(__dirname, '..', process.env.SQLITE_PATH.replace(/^\.\//, ''))
+  ? path.isAbsolute(process.env.SQLITE_PATH)
+    ? process.env.SQLITE_PATH
+    : path.join(__dirname, '..', process.env.SQLITE_PATH.replace(/^\.\//, ''))
   : path.join(dataDir, 'contentforge.db');
 
 export const db = new Database(dbPath);
